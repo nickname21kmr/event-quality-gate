@@ -1,0 +1,6 @@
+{"event_id":"bad-001","event_type":"purchase","user_id":"player-010","occurred_at":"2026-09-01T10:00:00Z","properties":{"amount":-1,"currency":"USD"}}
+{"event_id":"bad-002","event_type":"login","occurred_at":"2026-09-01T10:01:00Z"}
+{"event_id":"bad-001","event_type":"login","user_id":"player-011","occurred_at":"2026-09-01T10:02:00Z"}
+{"event_id":"bad-004","event_type":"teleport","user_id":"player-012","occurred_at":"2026-09-01T10:03:00Z"}
+{"event_id":"bad-005","event_type":"login","user_id":"player-013","occurred_at":"not-a-time"
+["bad-006", "login"]

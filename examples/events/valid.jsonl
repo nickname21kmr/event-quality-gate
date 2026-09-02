@@ -1,0 +1,4 @@
+{"event_id":"evt-001","event_type":"login","user_id":"player-001","occurred_at":"2026-09-01T09:00:00Z","properties":{"platform":"ios"}}
+{"event_id":"evt-002","event_type":"session_start","user_id":"player-001","session_id":"session-001","occurred_at":"2026-09-01T09:01:00+00:00"}
+{"event_id":"evt-003","event_type":"purchase","user_id":"player-002","occurred_at":"2026-09-01T09:05:00Z","properties":{"amount":12.5,"currency":"USD"}}
+{"event_id":"evt-004","event_type":"level_complete","user_id":"player-002","session_id":"session-002","occurred_at":"2026-09-01T09:15:00Z","properties":{"level":3}}

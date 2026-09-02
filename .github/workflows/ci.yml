@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check .
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile package
+        run: python -m compileall -q src
+      - name: Exercise passing quality gate
+        run: >-
+          python -m event_quality_gate validate
+          --contract examples/contracts/liveops-event-v1.json
+          --input examples/events/valid.jsonl
+          --format json
+          --output build/valid-report.json
+      - name: Exercise failing quality gate
+        shell: bash
+        run: |
+          if python -m event_quality_gate validate \
+            --contract examples/contracts/liveops-event-v1.json \
+            --input examples/events/invalid.jsonl \
+            --format json; then
+            echo "Expected invalid fixture to fail the quality gate."
+            exit 1
+          fi
