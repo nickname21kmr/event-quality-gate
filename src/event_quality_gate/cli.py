@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--input", required=True, help="Path to a JSONL event file.")
     validate.add_argument(
         "--format",
-        choices=("text", "json", "markdown"),
+        choices=("text", "json", "markdown", "junit"),
         default="text",
         dest="output_format",
         help="Report format (default: text).",

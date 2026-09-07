@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+from xml.etree import ElementTree
 
-from event_quality_gate.models import ValidationReport
+from event_quality_gate.models import ValidationIssue, ValidationReport
 
 
 def render_report(
@@ -23,6 +24,8 @@ def render_report(
         )
     if output_format == "markdown":
         return _render_markdown(report, max_issues=max_issues)
+    if output_format == "junit":
+        return _render_junit(report, max_issues=max_issues)
     if output_format == "text":
         return _render_text(report, max_issues=max_issues)
     raise ValueError(f"Unsupported report format: {output_format}")
@@ -87,6 +90,81 @@ def _render_markdown(report: ValidationReport, *, max_issues: int) -> str:
     else:
         lines.append("No contract violations found.")
     return "\n".join(lines) + "\n"
+
+
+def _render_junit(report: ValidationReport, *, max_issues: int) -> str:
+    all_by_line: dict[int, list[ValidationIssue]] = {}
+    visible_by_line: dict[int, list[ValidationIssue]] = {}
+    for issue in report.issues:
+        all_by_line.setdefault(issue.line, []).append(issue)
+    for issue in report.issues[:max_issues]:
+        visible_by_line.setdefault(issue.line, []).append(issue)
+
+    test_count = len(all_by_line) + (1 if report.valid_records else 0)
+    suite = ElementTree.Element(
+        "testsuite",
+        {
+            "name": report.contract_name,
+            "tests": str(test_count),
+            "failures": str(report.invalid_records),
+            "errors": "0",
+            "skipped": "0",
+        },
+    )
+    properties = ElementTree.SubElement(suite, "properties")
+    for name, value in (
+        ("contract", report.contract_name),
+        ("source", report.source),
+        ("total_records", report.total_records),
+        ("valid_records", report.valid_records),
+        ("invalid_records", report.invalid_records),
+        ("total_issues", len(report.issues)),
+        ("displayed_issues", min(len(report.issues), max_issues)),
+    ):
+        ElementTree.SubElement(properties, "property", {"name": name, "value": str(value)})
+
+    for line, line_issues in sorted(all_by_line.items()):
+        case = ElementTree.SubElement(
+            suite,
+            "testcase",
+            {
+                "classname": report.contract_name,
+                "name": f"record line {line}",
+                "file": report.source,
+                "line": str(line),
+            },
+        )
+        failure = ElementTree.SubElement(
+            case,
+            "failure",
+            {
+                "type": "data_contract_violation",
+                "message": f"{len(line_issues)} contract violation(s) on line {line}",
+            },
+        )
+        visible = visible_by_line.get(line, [])
+        if visible:
+            failure.text = "\n".join(
+                f"[{issue.code}] {issue.field or '-'}: {issue.message}" for issue in visible
+            )
+        else:
+            failure.text = "Issue details omitted by --max-issues; aggregate counts remain exact."
+
+    if report.valid_records:
+        case = ElementTree.SubElement(
+            suite,
+            "testcase",
+            {
+                "classname": report.contract_name,
+                "name": "valid records",
+                "file": report.source,
+            },
+        )
+        output = ElementTree.SubElement(case, "system-out")
+        output.text = f"{report.valid_records} record(s) passed validation."
+
+    body = ElementTree.tostring(suite, encoding="unicode", short_empty_elements=True)
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n{body}\n'
 
 
 def _escape(value: str) -> str:

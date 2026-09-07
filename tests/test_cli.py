@@ -8,6 +8,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree
 
 from event_quality_gate.cli import main
 
@@ -79,6 +80,29 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(result, 2)
         self.assertIn("missing.jsonl", stderr.getvalue())
+
+    def test_junit_report_is_written_for_invalid_input(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "reports" / "invalid.xml"
+            with contextlib.redirect_stdout(io.StringIO()):
+                result = main(
+                    [
+                        "validate",
+                        "--contract",
+                        str(CONTRACT),
+                        "--input",
+                        str(INVALID),
+                        "--format",
+                        "junit",
+                        "--output",
+                        str(output),
+                    ]
+                )
+
+            suite = ElementTree.parse(output).getroot()
+            self.assertEqual(result, 1)
+            self.assertEqual(suite.attrib["tests"], "6")
+            self.assertEqual(suite.attrib["failures"], "6")
 
 
 if __name__ == "__main__":

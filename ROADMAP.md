@@ -4,7 +4,6 @@ The roadmap is intentionally split into independently testable work packages.
 
 ## 0.2 — Pipeline integration
 
-- JUnit XML output for CI test annotations.
 - Directory and glob input support with per-file summaries.
 - Machine-readable contract validation errors.
 

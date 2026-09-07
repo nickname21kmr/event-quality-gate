@@ -2,6 +2,11 @@
 
 All notable changes are documented here.
 
+## Unreleased
+
+- Added dependency-free JUnit XML reports with one failed test case per invalid record.
+- Preserved exact failure counts when issue details are truncated with `--max-issues`.
+
 ## 0.1.0 — 2026-09-02
 
 - Added JSONL validation against versioned JSON contracts.
