@@ -4,7 +4,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Event Quality Gate is a local-first command-line tool for enforcing data contracts on JSONL event streams. It validates records line by line, catches schema and business-rule violations, and emits deterministic JSON, Markdown, or text reports suitable for CI artifacts and audit trails.
+Event Quality Gate is a local-first command-line tool for enforcing data contracts on JSONL event streams. It validates records line by line, catches schema and business-rule violations, and emits deterministic JSON, Markdown, text, or JUnit XML reports suitable for CI annotations, artifacts, and audit trails.
 
 The first example models synthetic LiveOps telemetry, but the validator is domain-neutral: the same contract format can protect product analytics, experimentation, operations, or public-data pipelines.
 
@@ -95,6 +95,18 @@ event-quality-gate validate \
 ```
 
 Every report contains the contract name, source path, pass/fail status, record counts, issue codes, line numbers, field paths, and messages. `--max-issues` limits displayed details without changing the aggregate counts.
+
+CI systems can ingest one failed test case per invalid record with `--format junit`:
+
+```bash
+event-quality-gate validate \
+  --contract examples/contracts/liveops-event-v1.json \
+  --input examples/events/invalid.jsonl \
+  --format junit \
+  --output reports/event-quality.xml
+```
+
+Valid records are summarized in one passing test case so large valid streams do not create unnecessarily large XML files. Failure counts remain exact when `--max-issues` truncates the displayed details.
 
 ## Development
 
